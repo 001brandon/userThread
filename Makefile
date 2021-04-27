@@ -19,6 +19,9 @@ TSTSRCS = test00.c
 
 # ar creates the static thread library
 
+test00: test00.o t_lib.a Makefile
+	${CC} ${CFLAGS} test00.o t_lib.a -o test00
+
 t_lib.a: ${LIBOBJS} Makefile
 	ar rcs t_lib.a ${LIBOBJS}
 
@@ -31,8 +34,6 @@ t_lib.o: t_lib.c t_lib.h Makefile
 test00.o: test00.c ud_thread.h Makefile
 	${CC} ${CFLAGS} -c test00.c
 
-test00: test00.o t_lib.a Makefile
-	${CC} ${CFLAGS} test00.o t_lib.a -o test00
 
 clean:
-	rm -f t_lib.a ${EXECS} ${LIBOBJS} ${TSTOBJS} 
+	rm -f t_lib.a ${EXECS} ${LIBOBJS} ${TSTOBJS} linked.o
