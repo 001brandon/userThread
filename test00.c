@@ -6,7 +6,7 @@ void assign(int pri)
   int i;
 
   for (i = 0; i < 3; i++)
-    printf("in assign(1): %d\n", i);
+    printf("in assign(1): %d with id\n", i);
 
   t_yield();
 
@@ -25,6 +25,7 @@ int main(int argc, char **argv)
 {
   t_init();
   t_create(assign, 1, 1);
+  t_create(assign,2,1);
 
   printf("in main(): 0\n");
 
