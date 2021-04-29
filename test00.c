@@ -26,6 +26,7 @@ int main(int argc, char **argv)
   t_init();
   t_create(assign, 1, 1);
   t_create(assign,2,1);
+  
 
   printf("in main(): 0\n");
 

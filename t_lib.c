@@ -84,6 +84,7 @@ void t_terminate()
         new->next=NULL;
         running=new;
         printf("this is the new id: %d\n",new->thread_id);
+        free(old->thread_context->uc_stack.ss_sp);
         free(old->thread_context);
         free(old);
         printf("Old is freed\n");
@@ -103,8 +104,10 @@ void t_shutdown() { //free running queue then free entire ready queue
         ready=ready->next;
         temp=ready;
     }
+    ready=NULL;
     free(running->thread_context);
     free(running);
+    running=NULL;
 }
 
 
