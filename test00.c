@@ -1,6 +1,8 @@
 #include "ud_thread.h"
 #include <stdio.h>
 
+int id_num = 0;
+
 void assignCubed(int pri)
 {
   int i;
@@ -22,7 +24,8 @@ void assignSquared(int pri)
     printf("in assignSquared(1): %d with id\n", i);
   t_yield();
 
-  t_create(assignCubed,3,1);
+  id_num++;
+  t_create(assignCubed,id_num,1);
 
   for (i = 20; i < 23; i++)
     printf("in assignSquared(2): %d with id\n", i);
@@ -38,28 +41,34 @@ void assign(int pri)
   for (i = 0; i < 3; i++)
     printf("in assign(1): %d with id\n", i);
 
-  t_create(assignSquared, 2, 1);
+  id_num++;
+  t_create(assignSquared,id_num, 1);
   t_yield();
 
   for (i = 10; i < 13; i++)
     printf("in assign(2): %d\n", i);
 
-  t_create(assignSquared, 1, 1);
+  id_num++;
+  t_create(assignSquared,id_num, 1);
   t_yield();
 
   for (i = 20; i < 23; i++)
     printf("in assign(3): %d\n", i);
 
-  t_create(assignSquared, 1, 1);
+  id_num++;
+  t_create(assignSquared,id_num, 1);
   t_terminate();
 }
 
 int main(int argc, char **argv) 
 {
   t_init();
-  t_create(assign, 1, 1);
-  t_create(assign,2,1);
-  t_create(assignSquared,3,1);
+  id_num++;
+  t_create(assign,id_num, 1);
+  id_num++;
+  t_create(assign,id_num,1);
+  id_num++;
+  t_create(assignSquared,id_num,1);
   
   
 
