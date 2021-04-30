@@ -1,9 +1,33 @@
 #include "ud_thread.h"
 #include <stdio.h>
 
+void assignCubed(int pri)
+{
+  int i;
+  for (i = 0; i < 3; i++)
+    printf("in assignCubed(1): %d with id\n", i);
+  t_yield();
+
+  for (i = 20; i < 23; i++)
+    printf("in assignCubed(2): %d with id\n", i);
+  t_yield();
+
+  t_terminate();
+}
+
 void assignSquared(int pri)
 {
+  int i;
+  for (i = 0; i < 3; i++)
+    printf("in assignSquared(1): %d with id\n", i);
   t_yield();
+
+  t_create(assignCubed,3,1);
+
+  for (i = 20; i < 23; i++)
+    printf("in assignSquared(2): %d with id\n", i);
+  t_yield();
+
   t_terminate();
 }
 
