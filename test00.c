@@ -1,6 +1,12 @@
 #include "ud_thread.h"
 #include <stdio.h>
 
+void assignSquared(int pri)
+{
+  t_yield();
+  t_terminate();
+}
+
 void assign(int pri)
 {
   int i;
@@ -8,16 +14,19 @@ void assign(int pri)
   for (i = 0; i < 3; i++)
     printf("in assign(1): %d with id\n", i);
 
+  t_create(assignSquared, 2, 1);
   t_yield();
 
   for (i = 10; i < 13; i++)
     printf("in assign(2): %d\n", i);
 
+  t_create(assignSquared, 1, 1);
   t_yield();
 
   for (i = 20; i < 23; i++)
     printf("in assign(3): %d\n", i);
 
+  t_create(assignSquared, 1, 1);
   t_terminate();
 }
 
@@ -26,6 +35,8 @@ int main(int argc, char **argv)
   t_init();
   t_create(assign, 1, 1);
   t_create(assign,2,1);
+  t_create(assignSquared,3,1);
+  
   
 
   printf("in main(): 0\n");
@@ -38,8 +49,7 @@ int main(int argc, char **argv)
   printf("in main(): 2\n");
   t_yield();
 
-  printf("done...\n");
-
+  printf("calling premature shutdown, not all threads are done\n");
   t_shutdown();
   return (0);
 }
