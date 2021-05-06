@@ -18,7 +18,7 @@ void t_yield()
         ready=ready->next;
         new->next=NULL;
         running=new;
-        printf("this is the new id: %d\n",new->thread_id);
+        //printf("this is the new id: %d\n",new->thread_id);
         swapcontext(old->thread_context, new->thread_context);
 
 
@@ -83,11 +83,11 @@ void t_terminate()
         ready=ready->next;
         new->next=NULL;
         running=new;
-        printf("this is the new id: %d\n",new->thread_id);
+        //printf("this is the new id: %d\n",new->thread_id);
         free(old->thread_context->uc_stack.ss_sp);
         free(old->thread_context);
         free(old);
-        printf("Old is freed\n");
+        //printf("Old is freed\n");
         setcontext(running->thread_context);
     }
     else {
@@ -112,32 +112,49 @@ void t_shutdown() { //free running queue then free entire ready queue
     running=NULL;
 }
 
-
- 
- 
- 
- 
-void  display(struct tcb *r)
-{
-    r=head;
-    if(r==NULL)
-    {
-    return;
-    }
-    while(r!=NULL)
-    {
-    printf("%d %d",r->thread_id, r->thread_priority);
-    r=r->next;
-    }
-    printf("\n");
+void sem_init(sem_t **sp, int sem_count){
+    *sp=malloc(sizeof(sem_t));
+    (*sp)->count=sem_count;
+    (*sp)->q=NULL;
 }
- 
- 
-void freeall(){
-    struct tcb *temp=head;
-    while(head!=NULL){
-        temp=head;
-        head=head->next;
-        free(temp);
+
+void sem_wait(sem_t *sp){
+    sp->count--;
+    printf("Executing sem_wait %d\n",sp->count);
+    if(sp->count < 0){
+        struct tcb *old=running;
+        struct tcb *new=ready;
+        struct tcb *temp=sp->q;
+        if(temp==NULL){
+            sp->q=old;
+        } else {
+            while(temp->next != NULL){
+                temp=temp->next;
+            }
+            temp->next=old;
+        }
+        ready=ready->next;
+        new->next=NULL;
+        running=new;
+        swapcontext(old->thread_context, new->thread_context);
+    }
+}
+
+void sem_signal(sem_t *sp){
+    sp->count++;
+    printf("Executing sem signal %d \n",sp->count);
+    if (sp->q != NULL){
+        struct tcb *temp=sp->q;
+        struct tcb *new=ready;
+        temp->next=NULL;
+        sp->q=sp->q->next;
+        if(new==NULL){
+            ready=temp;
+        } else {
+            while(new->next!=NULL){
+                new=new->next;
+            }
+            new->next=temp;
+        }
     }
 }

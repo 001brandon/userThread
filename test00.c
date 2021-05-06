@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 int id_num = 0;
+  sem_t *s;
 
 void assignCubed(int pri)
 {
@@ -60,15 +61,25 @@ void assign(int pri)
   t_terminate();
 }
 
+void test_sem(){
+  printf("Semwait on thread\n");
+  sem_wait(s);
+  printf("semwait done\n");
+  t_terminate();
+  
+  }
+
 int main(int argc, char **argv) 
 {
+
+  sem_init(&s,1);
   t_init();
   id_num++;
-  t_create(assign,id_num, 1);
+  t_create(test_sem,id_num, 1);
   id_num++;
-  t_create(assign,id_num,1);
+  t_create(test_sem,id_num,1);
   id_num++;
-  t_create(assignSquared,id_num,1);
+  t_create(test_sem,id_num,1);
   
   
 
@@ -77,13 +88,18 @@ int main(int argc, char **argv)
   t_yield();
 
   printf("in main(): 1\n");
+  sem_signal(s);
   t_yield();
 
   printf("in main(): 2\n");
+  sem_signal(s);
   t_yield();
 
   printf("calling premature shutdown, not all threads are done\n");
   t_shutdown();
+
+
+
   return (0);
 }
 
