@@ -146,15 +146,35 @@ void sem_signal(sem_t *sp){
     if (sp->q != NULL){
         struct tcb *temp=sp->q;
         struct tcb *new=ready;
-        temp->next=NULL;
         sp->q=sp->q->next;
         if(new==NULL){
             ready=temp;
+            ready->next=NULL;
         } else {
             while(new->next!=NULL){
                 new=new->next;
             }
             new->next=temp;
+            new->next->next=NULL;
         }
     }
 }
+
+void sem_destroy(sem_t **sp){
+    if((*sp)->q==NULL){
+        free(*sp);
+    } else {
+        struct tcb *temp=(*sp)->q;
+        struct tcb *tempR=ready;
+        if(ready == NULL) {
+            ready = temp;
+        }
+         else {
+            while(tempR->next != NULL){
+                tempR = tempR->next;
+            }
+        tempR->next=temp;
+        }
+        free(*sp);
+        }
+    }

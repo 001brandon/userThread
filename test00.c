@@ -95,6 +95,9 @@ int main(int argc, char **argv)
   sem_signal(s);
   t_yield();
 
+
+  sem_destroy(&s);
+
   printf("calling premature shutdown, not all threads are done\n");
   t_shutdown();
 
