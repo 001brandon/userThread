@@ -5,11 +5,11 @@ CFLAGS = -g
 
 LIBOBJS = t_lib.o 
 
-TSTOBJS = test00.o 
+TSTOBJS = test00.o partial-order.o rendevous.o
 
 # specify the executable 
 
-EXECS = test00
+EXECS = test00 partial-order rendevous
 
 # specify the source files
 
@@ -19,11 +19,13 @@ TSTSRCS = test00.c
 
 # ar creates the static thread library
 
-test00: test00.o t_lib.a Makefile
-	${CC} ${CFLAGS} test00.o t_lib.a -o test00
+
 
 t_lib.a: ${LIBOBJS} Makefile
 	ar rcs t_lib.a ${LIBOBJS}
+
+test00: test00.o t_lib.a Makefile
+	${CC} ${CFLAGS} test00.o t_lib.a -o test00
 
 # here, we specify how each file should be compiled, what
 # files they depend on, etc.
@@ -33,6 +35,18 @@ t_lib.o: t_lib.c t_lib.h Makefile
 
 test00.o: test00.c ud_thread.h Makefile
 	${CC} ${CFLAGS} -c test00.c
+
+rendevous: rendevous.o t_lib.a Makefile
+	${CC} ${CFLAGS} rendevous.o t_lib.a -o rendevous
+
+rendevous.o: rendevous.c ud_thread.h Makefile
+	${CC} ${CFLAGS} -c rendevous.c
+
+partial-order: partial-order.o t_lib.a Makefile
+	${CC} ${CFLAGS} partial-order.o t_lib.a -o partial-order
+
+partial-order.o: partial-order.c ud_thread.h Makefile
+	${CC} ${CFLAGS} -c partial-order.c
 
 
 clean:
