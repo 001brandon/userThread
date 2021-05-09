@@ -120,7 +120,7 @@ void sem_init(sem_t **sp, int sem_count){
 
 void sem_wait(sem_t *sp){
     sp->count--;
-    printf("Executing sem_wait %d\n",sp->count);
+   // printf("Executing sem_wait %d\n",sp->count);
     if(sp->count < 0){
         struct tcb *old=running;
         struct tcb *new=ready;
@@ -142,7 +142,7 @@ void sem_wait(sem_t *sp){
 
 void sem_signal(sem_t *sp){
     sp->count++;
-    printf("Executing sem signal %d \n",sp->count);
+    //printf("Executing sem signal %d \n",sp->count);
     if (sp->q != NULL){
         struct tcb *temp=sp->q;
         struct tcb *new=ready;

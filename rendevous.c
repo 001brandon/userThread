@@ -34,6 +34,7 @@ void main(){
     t_yield();
     t_yield();
     t_yield();
+
     t_shutdown();
     sem_destroy(&s1);
     sem_destroy(&s2);

@@ -18,6 +18,7 @@ void assignCubed(int pri)
   t_terminate();
 }
 
+
 void assignSquared(int pri)
 {
   int i;
