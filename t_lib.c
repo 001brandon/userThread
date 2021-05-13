@@ -226,3 +226,11 @@ void sem_destroy(sem_t **sp){
         }
         sem_signal(mb->mbox_sem);
     }
+
+    void send(int tid, char *msg, int len) {
+
+    }
+
+    void receive(int *tid, char *msg, int *len) {
+        
+    }
