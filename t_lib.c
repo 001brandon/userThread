@@ -196,6 +196,7 @@ void sem_destroy(sem_t **sp){
         new_msg->message=malloc(sizeof(char)*len);
         new_msg->len=len;
         new_msg->sender=running->thread_id;
+        new_msg->next = NULL;
         strncpy(new_msg->message, msg, len);
         if(mb->msg==NULL){
             mb->msg=new_msg;
@@ -205,7 +206,6 @@ void sem_destroy(sem_t **sp){
                 top=top->next;
             }
             top->next=new_msg;
-            top->next->next=NULL;
         }
         sem_signal(mb->mbox_sem);
         
@@ -215,6 +215,7 @@ void sem_destroy(sem_t **sp){
         sem_wait(mb->mbox_sem);
         messageNode *tmp=mb->msg;
         if(tmp==NULL){
+            *len = 0;
         }
         else{
             *len=tmp->len;
