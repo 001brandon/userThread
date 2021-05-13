@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <ucontext.h>
 #include <sys/mman.h>
+#include <string.h>
 #include<stdio.h>
 
 struct tcb {
@@ -30,12 +31,12 @@ struct messageNode {
          int  sender;       // TID of sender thread 
          int  receiver;     // TID of receiver thread 
          struct messageNode *next; // pointer to next node 
-};
+}; typedef struct messageNode messageNode;
 
-typedef struct {
+struct mbox {
 	  struct messageNode  *msg;       // message queue
 	  sem_t               *mbox_sem;  // used as lock
-} mbox;
+}; typedef struct mbox mbox;
 
 
 #endif

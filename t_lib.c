@@ -186,10 +186,42 @@ void sem_destroy(sem_t **sp){
     */
     void mbox_create(mbox **mb){
         *mb=malloc(sizeof(mbox));
-        *mb->msg=NULL;
+        (*mb)->msg=NULL;
         sem_init(&((*mb)->mbox_sem), 1);
     }
 
-    void mbox_deposit(mbox *mb){
+    void mbox_deposit(mbox *mb,char* msg, int len){
+        sem_wait(mb->mbox_sem);
+        messageNode *new_msg=malloc(sizeof(messageNode));
+        new_msg->message=malloc(sizeof(char)*len);
+        new_msg->len=len;
+        new_msg->sender=running->thread_id;
+        strncpy(new_msg->message, msg, len);
+        if(mb->msg==NULL){
+            mb->msg=new_msg;
+        } else {
+            messageNode *top = mb->msg;
+            while(top->next != NULL){
+                top=top->next;
+            }
+            top->next=new_msg;
+            top->next->next=NULL;
+        }
+        sem_signal(mb->mbox_sem);
         
+    }
+
+    void mbox_withdraw(mbox *mb, char* msg, int *len){
+        sem_wait(mb->mbox_sem);
+        messageNode *tmp=mb->msg;
+        if(tmp==NULL){
+        }
+        else{
+            *len=tmp->len;
+            strncpy(msg,tmp->message,*len);
+            mb->msg=mb->msg->next;
+            free(tmp->message);
+            free(tmp);
+        }
+        sem_signal(mb->mbox_sem);
     }

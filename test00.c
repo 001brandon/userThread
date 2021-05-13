@@ -1,130 +1,55 @@
-#include "ud_thread.h"
+/* 
+ * Test Program #6 - Mailbox
+ */
+
 #include <stdio.h>
+#include <stdlib.h>
+#include "ud_thread.h"
 
-int id_num = 0;
-  sem_t *s1, *s2, *s;
+mbox *mb;
+char *msg[2] = {"hello world...", "bye, bye"};
 
-void assignCubed(int pri)
+void producer(int id) 
 {
   int i;
-  for (i = 0; i < 3; i++)
-    printf("in assignCubed(1): %d with id\n", i);
-  t_yield();
+  char mymsg[30];
 
-  for (i = 20; i < 23; i++)
-    printf("in assignCubed(2): %d with id\n", i);
-  t_yield();
-
-  t_terminate();
-}
-
-
-void assignSquared(int pri)
-{
-  int i;
-  for (i = 0; i < 3; i++)
-    printf("in assignSquared(1): %d with id\n", i);
-  t_yield();
-
-  id_num++;
-  t_create(assignCubed,id_num,1);
-
-  for (i = 20; i < 23; i++)
-    printf("in assignSquared(2): %d with id\n", i);
-  t_yield();
-
-  t_terminate();
-}
-
-void assign(int pri)
-{
-  int i;
-
-  for (i = 0; i < 3; i++)
-    printf("in assign(1): %d with id\n", i);
-
-  id_num++;
-  t_create(assignSquared,id_num, 1);
-  t_yield();
-
-  for (i = 10; i < 13; i++)
-    printf("in assign(2): %d\n", i);
-
-  id_num++;
-  t_create(assignSquared,id_num, 1);
-  t_yield();
-
-  for (i = 20; i < 23; i++)
-    printf("in assign(3): %d\n", i);
-
-  id_num++;
-  t_create(assignSquared,id_num, 1);
-  t_terminate();
-}
-
-void test_sem(){
-  printf("Semwait on thread\n");
-  sem_wait(s);
-  printf("semwait done\n");
-  t_terminate();
-  
+  for (i = 0; i < 2; i++) {
+    sprintf(mymsg, "%s - tid %d", msg[i], id);
+    printf("Producer (%d): [%s] [length=%d]\n", id, mymsg, (int) strlen(mymsg));
+    mbox_deposit(mb, mymsg, strlen(mymsg));
   }
 
-int main(int argc, char **argv) 
-{
-
-  sem_init(&s1,0);
-  sem_init(&s2,0);
-  t_init();
-  id_num++;
-  t_create(worker1,id_num, 1);
-  id_num++;
-  t_create(worker2,id_num,1);
-    id_num++;
-  t_create(worker3,id_num,1);
-    id_num++;
-  t_create(worker4,id_num,1);
-  
-  
-
-  printf("in main(): 0\n");
-
-  t_yield();
-
-  printf("in main(): 1\n");
-  //sem_signal(s);
-  t_yield();
-
-  printf("in main(): 2\n");
-  //sem_signal(s);
-  t_yield();
-  t_yield();
-  t_yield();
-  t_yield();
-
-
-  //sem_destroy(&s);
-
-  printf("calling premature shutdown, not all threads are done\n");
-  t_shutdown();
-
-
-
-  return (0);
+  t_terminate();
 }
 
-/* --- output -----
-in main(): 0
-in assign(1): 0
-in assign(1): 1
-in assign(1): 2
-in main(): 1
-in assign(2): 10
-in assign(2): 11
-in assign(2): 12
-in main(): 2
-in assign(3): 20
-in assign(3): 21
-in assign(3): 22
-done...
-*/
+void consumer(int id) 
+{
+  int i;
+  int len;
+  char mesg[1024];
+
+  for (i = 0; i < 4; i++) {
+    mbox_withdraw(mb, mesg, &len);
+    printf("Message from mailbox: [%s]\n", mesg);
+  }
+
+  t_terminate();
+}
+
+int main(void) {
+
+   t_init();
+
+   mbox_create(&mb);
+   t_create(producer, 1, 1);
+   t_create(producer, 2, 1);
+   t_create(consumer, 3, 1);  
+   t_yield();
+   //mbox_destroy(&mb);
+
+   t_shutdown();
+   printf("Done with mailbox test...\n");
+
+   return 0;
+}
