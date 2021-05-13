@@ -36,7 +36,6 @@ void main(){
     sem_init(&s2,0);
     t_init();
     int id_num=1;
-    t_init();
     id_num++;
     t_create(worker1,id_num, 1);
     id_num++;

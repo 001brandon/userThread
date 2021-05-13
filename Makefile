@@ -5,11 +5,11 @@ CFLAGS = -g
 
 LIBOBJS = t_lib.o 
 
-TSTOBJS = test00.o partialorder.o rendevous.o
+TSTOBJS = test00.o partialorder.o rendezvous.o
 
 # specify the executable 
 
-EXECS = test00 partialorder rendevous
+EXECS = test00 partialorder rendezvous
 
 # specify the source files
 
@@ -36,11 +36,11 @@ t_lib.o: t_lib.c t_lib.h Makefile
 test00.o: test00.c ud_thread.h Makefile
 	${CC} ${CFLAGS} -c test00.c
 
-rendevous: rendevous.o t_lib.a Makefile
-	${CC} ${CFLAGS} rendevous.o t_lib.a -o rendevous
+rendezvous: rendezvous.o t_lib.a Makefile
+	${CC} ${CFLAGS} rendezvous.o t_lib.a -o rendezvous
 
-rendevous.o: rendevous.c ud_thread.h Makefile
-	${CC} ${CFLAGS} -c rendevous.c
+rendezvous.o: rendezvous.c ud_thread.h Makefile
+	${CC} ${CFLAGS} -c rendezvous.c
 
 partialorder: partialorder.o t_lib.a Makefile
 	${CC} ${CFLAGS} partialorder.o t_lib.a -o partialorder

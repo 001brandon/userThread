@@ -178,3 +178,18 @@ void sem_destroy(sem_t **sp){
         free(*sp);
         }
     }
+
+    /*
+    mbox deposit puts in a new message in the queue
+    mbox withdraw takes out that message
+    mbox destroy frees space
+    */
+    void mbox_create(mbox **mb){
+        *mb=malloc(sizeof(mbox));
+        *mb->msg=NULL;
+        sem_init(&((*mb)->mbox_sem), 1);
+    }
+
+    void mbox_deposit(mbox *mb){
+        
+    }
