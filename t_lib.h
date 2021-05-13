@@ -15,6 +15,8 @@ struct tcb {
 	int         thread_id;
     int         thread_priority;
     ucontext_t *thread_context;
+    sem_t       *mq_sem; //lock for message queue
+    sem_t       *br_sem; //semaphore for blocking receive
 	struct tcb *next;
 };
 
