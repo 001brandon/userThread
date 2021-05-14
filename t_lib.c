@@ -316,6 +316,7 @@ void sem_destroy(sem_t **sp){
             free(new_msg);
             return;
         }
+        sem_wait(thread->mq_sem); //adding to message queue is a critical section
         new_msg->message=malloc(sizeof(char)*len);
         new_msg->len=len;
         new_msg->sender=running->thread_id;
@@ -332,6 +333,8 @@ void sem_destroy(sem_t **sp){
             }
             ptr->next = new_msg;
         }
+        sem_signal(thread->br_sem);
+        sem_signal(thread->mq_sem);
         
     }
 
@@ -342,5 +345,6 @@ void sem_destroy(sem_t **sp){
     that is part of the TCB
     */
     void receive(int *tid, char *msg, int *len) {
-
+        sem_wait(running->br_sem);
+        
     }

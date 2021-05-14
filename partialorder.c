@@ -6,12 +6,16 @@ void *worker1(void *arg) {
   printf("I am worker 1\n");
   sem_signal(s2);
   sem_signal(s1);
+  char msg[32] = "ewr";
+  send(2,msg,4);
+  sem_signal(s3);
   t_terminate();
 }
 
 void *worker2(void *arg) {
   printf("I am worker 2\n");
   sem_signal(s1);
+  sem_wait(s3);
   sem_wait(s3);
   t_terminate();
 }
