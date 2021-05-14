@@ -9,6 +9,11 @@ void *worker1(void *arg) {
   char msg[32] = "ewr";
   send(2,msg,32);
   sem_signal(s3);
+  char reading[35];
+  int len;
+  int who=0;
+  receive(&who,reading,&len);
+  printf("asdfasdf by thread %d: %s\n",who,reading);
   t_terminate();
 }
 
@@ -31,12 +36,12 @@ void *worker2(void *arg) {
   printf("message by thread %d: %s\n",who,msg);
   printf("woof\n");
   who = 0;
+  printf("there will be nothing to read here ever\n");
   receive(&who,msg,&len);
   printf("message by thread %d: %s\n",who,msg);
   printf("woof\n");
   free(msg);
   free(msg2);
-  printf("i am terminating!\n");
   t_terminate();
 }
 

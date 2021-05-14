@@ -28,6 +28,7 @@ void t_yield()
 
 void t_init()
 {
+  shutdownFlag = 0;
   //ucontext_t *tmp, tmpTest1, tmpTest2;
   struct tcb *tmp=malloc(sizeof(struct tcb));
   tmp->thread_context=(ucontext_t *)malloc(sizeof(ucontext_t));
@@ -161,34 +162,45 @@ void t_terminate()
 
 void t_shutdown() { //free running queue then free entire ready queue
     //how it works: gather every single tcb still running through allThreads list, free everything
-    struct allThreads *ptr = origin;
+    shutdownFlag = 1;
+    struct allThreads *ptr = origin->next;
     struct allThreads *prev = ptr;
     while(ptr != NULL) {
         ptr = ptr->next;
         printf("looking at thread with id: %d\n",prev->thread->thread_id);
+        sem_signal(prev->thread->br_sem);
+        t_yield();
         //delete the semaphores attached to tcb
-        sem_destroy(&(prev->thread->mq_sem));
-        sem_destroy(&(prev->thread->br_sem));
+        printf("done\n");
+        //sem_destroy(&(prev->thread->mq_sem));
+        //sem_destroy(&(prev->thread->br_sem));
 
         //delete message queue
-        struct messageNode *m = prev->thread->msg;
+        /*struct messageNode *m = prev->thread->msg;
         struct messageNode *mPrev = prev->thread->msg;
         while(m != NULL) {
             m = m->next;
             free(mPrev->message);
             free(mPrev);
             mPrev = m;
-        }
+        }*/
 
         //delete context
-        free(prev->thread->thread_context->uc_stack.ss_sp);
-        free(prev->thread->thread_context);
+        //free(prev->thread->thread_context->uc_stack.ss_sp);
+        //free(prev->thread->thread_context);
         
 
-        free(prev->thread);
-        free(prev);
+        //free(prev->thread);
+        //free(prev);
         prev = ptr;
     }
+    sem_destroy(&(running->mq_sem));
+    sem_destroy(&(running->br_sem));
+    free(running->thread_context->uc_stack.ss_sp);
+    free(running->thread_context);
+    free(running);
+    free(origin);
+    running=NULL;
     /*
     struct tcb *temp=ready;
     while(ready!=NULL){
@@ -389,32 +401,36 @@ void sem_destroy(sem_t **sp){
     that is part of the TCB
     */
     void receive(int *tid, char *msg, int *len) {
-        messageNode *ptr = running->msg;
-        messageNode *prev = NULL;
         //printf("this is the message: %s\n",ptr->message);
-        while(ptr != NULL) {
-            if(*tid == 0 || ptr->sender == *tid) {//message found
-                printf("message found!\n");
-                *tid = ptr->sender;
-                strcpy(msg, ptr->message);
-                *len = ptr->len;
-                if(prev == NULL) {
-                    running->msg = running->msg->next;
+        while(1) { //will go until forcibly returned out
+            messageNode *ptr = running->msg;
+            messageNode *prev = NULL;
+            while(ptr != NULL) {
+                if(*tid == 0 || ptr->sender == *tid) {//message found
+                    printf("message found!\n");
+                    *tid = ptr->sender;
+                    strcpy(msg, ptr->message);
+                    *len = ptr->len;
+                    if(prev == NULL) {
+                        running->msg = running->msg->next;
+                    }
+                    else{
+                        prev->next = prev->next->next;
+                        //running->msg = prev;
+                    }
+                    free(ptr->message);
+                    free(ptr);
+                    return;
                 }
-                else{
-                    prev->next = prev->next->next;
-                    //running->msg = prev;
-                }
-                free(ptr->message);
-                free(ptr);
+                prev = ptr;
+                ptr = ptr->next;
+            }
+            printf("nothing found!\n");
+            setToZero(running->br_sem);
+            sem_wait(running->br_sem);
+            if(shutdownFlag == 1) {
+                printf("this is the shutdown signal being read\n");
                 return;
             }
-            prev = ptr;
-            ptr = ptr->next;
         }
-        printf("nothing found!\n");
-        setToZero(running->br_sem);
-        sem_wait(running->br_sem);
-        printf("recursing!\n");
-        receive(tid,msg,len); //Will keep running until it finds something to receive
     }

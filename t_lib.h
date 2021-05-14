@@ -47,4 +47,6 @@ struct allThreads {
 
 }; typedef struct allThreads allThreads;
 
+int shutdownFlag;
+
 #endif
