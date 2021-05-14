@@ -34,6 +34,11 @@ void t_init()
   tmp->next=NULL;
   tmp->thread_id=0;
   tmp->thread_priority=0;
+  sem_t *s1,*s2;
+  sem_init(&s1,1);
+  sem_init(&s2,0);
+  tmp->mq_sem = s1;
+  tmp->br_sem = s2;
   getcontext(tmp->thread_context);
   running = tmp;
   ready=NULL;
@@ -69,6 +74,11 @@ int t_create(void (*fct)(int), int id, int pri)
   newTcb->next=NULL;
   newTcb->thread_priority = pri;
   newTcb->thread_id = id;
+  sem_t *s1,*s2;
+  sem_init(&s1,1);
+  sem_init(&s2,0);
+  newTcb->mq_sem = s1;
+  newTcb->br_sem = s2;
   newTcb->thread_context = uc;
   struct tcb *temp=ready;
   if(temp==NULL){
@@ -101,7 +111,13 @@ void t_terminate()
     //remove from allThreads
     struct allThreads *aThread = origin;
     struct allThreads *aPrev;
-    while(aThread != NULL) {
+
+    //delete the semaphores attached to tcb
+    sem_destroy(&(old->mq_sem));
+    sem_destroy(&(old->br_sem));
+
+    //delete from allThreads linked list
+    while(aThread != NULL) { 
         struct tcb *t;
         t = (aThread->thread);
         if(t->thread_id == running->thread_id) {
@@ -118,6 +134,7 @@ void t_terminate()
         aThread = aThread->next;
     }
 
+    //delete from running queue
     if(ready!=NULL){        
         ready=ready->next;
         new->next=NULL;
@@ -153,6 +170,11 @@ void t_shutdown() { //free running queue then free entire ready queue
         temp=ready;
     }
     ready=NULL;
+
+    //delete the semaphores attached to tcb
+    sem_destroy(&(running->mq_sem));
+    sem_destroy(&(running->br_sem));
+
     free(running->thread_context->uc_stack.ss_sp);
     free(running->thread_context);
     free(running);
