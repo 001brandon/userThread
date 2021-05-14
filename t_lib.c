@@ -2,6 +2,7 @@
 
 struct tcb *running;
 struct tcb *ready;
+struct allThreads *origin;
 
 void t_yield()
 {
@@ -36,6 +37,12 @@ void t_init()
   getcontext(tmp->thread_context);
   running = tmp;
   ready=NULL;
+  struct allThreads *t = malloc(sizeof(struct allThreads));
+  t->next = NULL;
+  t->thread = tmp;
+  origin = t;
+  struct tcb *looking = (origin->thread);
+  printf("hello: %d\n",looking->thread_id);
 }
 
 int t_create(void (*fct)(int), int id, int pri)
@@ -72,6 +79,17 @@ int t_create(void (*fct)(int), int id, int pri)
       }
       temp->next=newTcb;
   }
+  struct allThreads *aThread = malloc(sizeof(struct allThreads));
+  struct tcb *looking;
+  aThread->next = NULL;
+  aThread->thread = newTcb;
+  struct allThreads *tt = origin;
+  while(tt->next != NULL) {
+      tt = tt->next;
+  }
+  tt->next = aThread;
+  looking = (origin->thread);
+  printf("this is the thread id: %d\n",looking->thread_id);
 }
 
 void t_terminate()
@@ -79,11 +97,40 @@ void t_terminate()
     struct tcb *old = running;
     struct tcb *new=ready;
     struct tcb *temp=new;
+
+    //remove from allThreads
+    struct allThreads *aThread = origin;
+    struct allThreads *aPrev;
+    while(aThread != NULL) {
+        struct tcb *t;
+        t = (aThread->thread);
+        if(t->thread_id == running->thread_id) {
+            if(aPrev == NULL) { //we are terminating the original thread which idk if that can actually happen
+                origin = aThread->next;
+            }
+            else{
+                aPrev->next = aThread->next;
+            }
+            free(aThread);
+            break;
+        }
+        aPrev = aThread;
+        aThread = aThread->next;
+    }
+
     if(ready!=NULL){        
         ready=ready->next;
         new->next=NULL;
         running=new;
         //printf("this is the new id: %d\n",new->thread_id);
+        messageNode *msgList = old->msg;
+        messageNode *msgPrev;
+        while(msgList != NULL) {
+            msgPrev = msgList;
+            free(msgPrev->message);
+            free(msgPrev);
+            msgList = msgList->next;
+        }
         free(old->thread_context->uc_stack.ss_sp);
         free(old->thread_context);
         free(old);
@@ -96,7 +143,7 @@ void t_terminate()
 }
 
 void t_shutdown() { //free running queue then free entire ready queue
-
+    free(origin);
     struct tcb *temp=ready;
     while(ready!=NULL){
         free(temp->thread_context->uc_stack.ss_sp);
@@ -227,10 +274,51 @@ void sem_destroy(sem_t **sp){
         sem_signal(mb->mbox_sem);
     }
 
-    void send(int tid, char *msg, int len) {
-
+    struct tcb* getThread(int tid) {
+        struct allThreads *ptr = origin;
+        while(ptr != NULL) {
+            if(ptr->thread->thread_id == tid) {
+                return ptr->thread;
+            }
+            ptr = ptr->next;
+        }
+        printf("thread with tid %d not found!\n",tid);
+        return NULL;
     }
 
-    void receive(int *tid, char *msg, int *len) {
+    void send(int tid, char *msg, int len) {
+        struct tcb *thread = getThread(tid);
+        messageNode *new_msg=malloc(sizeof(messageNode));
+        if(thread == NULL) {
+            printf("send failed!\n");
+            free(new_msg);
+            return;
+        }
+        new_msg->message=malloc(sizeof(char)*len);
+        new_msg->len=len;
+        new_msg->sender=running->thread_id;
+        new_msg->receiver = tid;
+        new_msg->next = NULL;
+        strncpy(new_msg->message, msg, len);
+        messageNode *ptr = thread->msg;
+        if(ptr == NULL) {
+            thread->msg = new_msg;
+        }
+        else {
+            while(ptr->next != NULL) {
+                ptr = ptr->next;
+            }
+            ptr->next = new_msg;
+        }
         
+    }
+
+
+    /*
+    When a thread waits on a blocking receive, its 
+    TCB is queued on the queue of the semaphore (i.e., br_sem) 
+    that is part of the TCB
+    */
+    void receive(int *tid, char *msg, int *len) {
+
     }

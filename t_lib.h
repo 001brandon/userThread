@@ -15,8 +15,9 @@ struct tcb {
 	int         thread_id;
     int         thread_priority;
     ucontext_t *thread_context;
-    sem_t       *mq_sem; //lock for message queue
-    sem_t       *br_sem; //semaphore for blocking receive
+    struct messageNode  *msg; //thread's message queue
+    struct sem_t       *mq_sem; //lock for message queue
+    struct sem_t       *br_sem; //semaphore for blocking receive
 	struct tcb *next;
 };
 
@@ -40,5 +41,10 @@ struct mbox {
 	  sem_t               *mbox_sem;  // used as lock
 }; typedef struct mbox mbox;
 
+struct allThreads {
+    tcb *thread;   //Pointer to a pointer of a tcb, this won't affect its spot in the ready/running/blocked queue, but is just here so anyone can grab it if it knows the id
+    struct allThreads *next;
+
+}; typedef struct allThreads allThreads;
 
 #endif
