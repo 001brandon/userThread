@@ -52,6 +52,7 @@ void *worker3(void *arg) {
   send(2,msg,32);
   sem_signal(s3);
   printf("I am worker 3\n");
+  sem_wait(s2);
   t_terminate();
 }
 
@@ -64,7 +65,7 @@ void *worker4(void *arg) {
 }
 
 
-void main(){
+int main(){
     sem_init(&s1,0);
     sem_init(&s2,0);
     sem_init(&s3,0);
@@ -86,9 +87,9 @@ void main(){
     t_yield();
     t_yield(); //need this many yields to make sure that we can return to the semaphore ready queue before the t_shutdown
     printf("calling shutdown\n");
-    t_shutdown();
     sem_destroy(&s1);
     sem_destroy(&s2);
     sem_destroy(&s3);
-
+    t_shutdown();
+    return 0;
 }
