@@ -7,24 +7,44 @@ void *worker1(void *arg) {
   sem_signal(s2);
   sem_signal(s1);
   char msg[32] = "ewr";
-  send(2,msg,4);
+  send(2,msg,32);
   sem_signal(s3);
   t_terminate();
 }
 
 void *worker2(void *arg) {
   printf("I am worker 2\n");
+  char *msg, *msg2;
+  msg = malloc(sizeof(char)*100);
+  msg2 = malloc(sizeof(char)*400);
+  int len,len2;
+  int who=0;
+  int who2=0;
   sem_signal(s1);
-  sem_wait(s3);
-  sem_wait(s3);
+  //sem_wait(s3);
+  //sem_wait(s3);
+  receive(&who,msg,&len);
+  printf("message by thread %d: %s\n",who,msg);
+  printf("meow\n");
+  who = 0;
+  receive(&who,msg,&len);
+  printf("message by thread %d: %s\n",who,msg);
+  printf("woof\n");
+  who = 0;
+  receive(&who,msg,&len);
+  printf("message by thread %d: %s\n",who,msg);
+  printf("woof\n");
+  free(msg);
+  free(msg2);
+  printf("i am terminating!\n");
   t_terminate();
 }
 
 void *worker3(void *arg) {
   sem_wait(s2);
   sem_wait(s2);
-  char msg[32] = "heasdf";
-  send(2,msg,4);
+  char msg[32] = "heaskllj";
+  send(2,msg,32);
   sem_signal(s3);
   printf("I am worker 3\n");
   t_terminate();
@@ -60,6 +80,7 @@ void main(){
     t_yield();
     t_yield();
     t_yield(); //need this many yields to make sure that we can return to the semaphore ready queue before the t_shutdown
+    printf("calling shutdown\n");
     t_shutdown();
     sem_destroy(&s1);
     sem_destroy(&s2);

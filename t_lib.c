@@ -160,9 +160,47 @@ void t_terminate()
 }
 
 void t_shutdown() { //free running queue then free entire ready queue
-    free(origin);
+    //how it works: gather every single tcb still running through allThreads list, free everything
+    struct allThreads *ptr = origin;
+    struct allThreads *prev = ptr;
+    while(ptr != NULL) {
+        ptr = ptr->next;
+        printf("looking at thread with id: %d\n",prev->thread->thread_id);
+        //delete the semaphores attached to tcb
+        sem_destroy(&(prev->thread->mq_sem));
+        sem_destroy(&(prev->thread->br_sem));
+
+        //delete message queue
+        struct messageNode *m = prev->thread->msg;
+        struct messageNode *mPrev = prev->thread->msg;
+        while(m != NULL) {
+            m = m->next;
+            free(mPrev->message);
+            free(mPrev);
+            mPrev = m;
+        }
+
+        //delete context
+        free(prev->thread->thread_context->uc_stack.ss_sp);
+        free(prev->thread->thread_context);
+        
+
+        free(prev->thread);
+        free(prev);
+        prev = ptr;
+    }
+    /*
     struct tcb *temp=ready;
     while(ready!=NULL){
+        //delete message queue
+        struct messageNode *m = prev->thread->msg;
+        struct messageNode *mPrev = prev->thread->msg;
+        while(m != NULL) {
+            m = m->next;
+            free(mPrev->message);
+            free(mPrev);
+            mPrev = m;
+        }
         free(temp->thread_context->uc_stack.ss_sp);
         free(temp->thread_context);
         free(temp);
@@ -175,10 +213,12 @@ void t_shutdown() { //free running queue then free entire ready queue
     sem_destroy(&(running->mq_sem));
     sem_destroy(&(running->br_sem));
 
+    
+
     free(running->thread_context->uc_stack.ss_sp);
     free(running->thread_context);
     free(running);
-    running=NULL;
+    running=NULL;*/
 }
 
 void sem_init(sem_t **sp, int sem_count){
@@ -232,7 +272,8 @@ void sem_signal(sem_t *sp){
 void sem_destroy(sem_t **sp){
     if((*sp)->q==NULL){
         free(*sp);
-    } else {
+    } 
+    else {
         struct tcb *temp=(*sp)->q;
         struct tcb *tempR=ready;
         if(ready == NULL) {
@@ -245,8 +286,8 @@ void sem_destroy(sem_t **sp){
         tempR->next=temp;
         }
         free(*sp);
-        }
     }
+}
 
     /*
     mbox deposit puts in a new message in the queue
@@ -338,6 +379,9 @@ void sem_destroy(sem_t **sp){
         
     }
 
+    void setToZero(sem_t *sem) {
+        sem->count = 0;
+    }
 
     /*
     When a thread waits on a blocking receive, its 
@@ -345,6 +389,32 @@ void sem_destroy(sem_t **sp){
     that is part of the TCB
     */
     void receive(int *tid, char *msg, int *len) {
+        messageNode *ptr = running->msg;
+        messageNode *prev = NULL;
+        //printf("this is the message: %s\n",ptr->message);
+        while(ptr != NULL) {
+            if(*tid == 0 || ptr->sender == *tid) {//message found
+                printf("message found!\n");
+                *tid = ptr->sender;
+                strcpy(msg, ptr->message);
+                *len = ptr->len;
+                if(prev == NULL) {
+                    running->msg = running->msg->next;
+                }
+                else{
+                    prev->next = prev->next->next;
+                    //running->msg = prev;
+                }
+                free(ptr->message);
+                free(ptr);
+                return;
+            }
+            prev = ptr;
+            ptr = ptr->next;
+        }
+        printf("nothing found!\n");
+        setToZero(running->br_sem);
         sem_wait(running->br_sem);
-        
+        printf("recursing!\n");
+        receive(tid,msg,len); //Will keep running until it finds something to receive
     }
