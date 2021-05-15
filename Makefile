@@ -48,6 +48,11 @@ partialorder: partialorder.o t_lib.a Makefile
 partialorder.o: partialorder.c ud_thread.h Makefile
 	${CC} ${CFLAGS} -c partialorder.c
 
+test8.o: test8.c ud_thread.h Makefile
+	${CC} ${CFLAGS} -c test8.c
+
+test8: test8.o t_lib.a Makefile
+	${CC} ${CFLAGS} test8.o t_lib.a -o test8
 
 clean:
 	rm -f t_lib.a ${EXECS} ${LIBOBJS} ${TSTOBJS} linked.o

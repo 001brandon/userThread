@@ -282,6 +282,9 @@ void sem_signal(sem_t *sp){
 }
 
 void sem_destroy(sem_t **sp){
+    if(*sp == NULL) {
+        return;
+    }
     if((*sp)->q==NULL){
         free(*sp);
     } 
@@ -309,7 +312,9 @@ void sem_destroy(sem_t **sp){
     void mbox_create(mbox **mb){
         *mb=malloc(sizeof(mbox));
         (*mb)->msg=NULL;
-        sem_init(&((*mb)->mbox_sem), 1);
+        sem_t *s1;
+        sem_init(&s1,1);
+        (*mb)->mbox_sem = s1;
     }
 
     void mbox_deposit(mbox *mb,char* msg, int len){
@@ -347,6 +352,19 @@ void sem_destroy(sem_t **sp){
             free(tmp);
         }
         sem_signal(mb->mbox_sem);
+    }
+
+    void mbox_destroy(mbox **mb){
+        mbox *box = *mb;
+        messageNode *temp=((*mb)->msg);
+        messageNode *temp2=temp;
+        while(temp!=NULL){
+            temp=temp->next;
+            free(temp2->message);
+            free(temp2);
+        }
+        sem_destroy(&(*mb)->mbox_sem);
+        free(*mb);
     }
 
     struct tcb* getThread(int tid) {

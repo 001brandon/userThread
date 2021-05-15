@@ -11,6 +11,7 @@
 #include <string.h>
 #include<stdio.h>
 
+
 struct tcb {
 	int         thread_id;
     int         thread_priority;
@@ -48,5 +49,6 @@ struct allThreads {
 }; typedef struct allThreads allThreads;
 
 int shutdownFlag;
+
 
 #endif
