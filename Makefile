@@ -17,6 +17,7 @@ LIBSRCS = t_lib.c
 
 TSTSRCS = test00.c
 
+
 # ar creates the static thread library
 
 
@@ -53,6 +54,18 @@ test8.o: test8.c ud_thread.h Makefile
 
 test8: test8.o t_lib.a Makefile
 	${CC} ${CFLAGS} test8.o t_lib.a -o test8
+
+test6.o: test6.c ud_thread.h Makefile
+	${CC} ${CFLAGS} -c test6.c
+
+test6: test6.o t_lib.a Makefile
+	${CC} ${CFLAGS} test6.o t_lib.a -o test6
+
+test5.o: test5.c ud_thread.h Makefile
+	${CC} ${CFLAGS} -c test5.c
+
+test5: test5.o t_lib.a Makefile
+	${CC} ${CFLAGS} test5.o t_lib.a -o test5
 
 clean:
 	rm -f t_lib.a ${EXECS} ${LIBOBJS} ${TSTOBJS} linked.o

@@ -1,55 +1,59 @@
-/* 
- * Test Program #6 - Mailbox
+/*
+ * Test Program #8 - Asynchronous Send/Receive
  */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "ud_thread.h"
 
-mbox *mb;
-char *msg[2] = {"hello world...", "bye, bye"};
-
-void producer(int id) 
+void producer(int val) 
 {
-  int i;
-  char mymsg[30];
-
-  for (i = 0; i < 2; i++) {
-    sprintf(mymsg, "%s - tid %d", msg[i], id);
-    printf("Producer (%d): [%s] [length=%d]\n", id, mymsg, (int) strlen(mymsg));
-    mbox_deposit(mb, mymsg, strlen(mymsg));
-  }
-
-  t_terminate();
-}
-
-void consumer(int id) 
-{
-  int i;
-  int len;
-  char mesg[1024];
+  char msg[] = "hello world...";
+  int i = 0;
 
   for (i = 0; i < 4; i++) {
-    mbox_withdraw(mb, mesg, &len);
-    printf("Message from mailbox: [%s]\n", mesg);
+    msg[12] = (char) i+0x30;
+    send(2, msg, strlen(msg));
+    printf("thread %d [%s]...\n", val, msg);
   }
 
+  printf("producer thread %d terminates...\n", val);
   t_terminate();
 }
 
-int main(void) {
+void consumer(int val) 
+{
+  int i, len, who = 0;
+  char *msg;
 
-   t_init();
+  msg = (char *) malloc(1024);
 
-   mbox_create(&mb);
-   t_create(producer, 1, 1);
-   t_create(producer, 2, 1);
-   t_create(consumer, 3, 1);  
-   t_yield();
-   mbox_destroy(&mb);
+  for (i = 0; i < 8; i++) {
+    who = 0;
+    receive(&who, msg, &len);
+    if (who != 0)
+      printf("I got message [%s] from %d...\n", msg, who);
+  }
+   
+  free(msg);
 
-   t_shutdown();
-   printf("Done with mailbox test...\n");
+  printf("consumer thread %d terminate...\n", val);
+  t_terminate();
+}
 
-   return 0;
+int main(void) 
+{
+  t_init();
+
+  t_create(producer, 1, 1);
+  t_create(producer, 3, 1);
+  t_create(consumer, 2, 1);
+
+  t_yield();
+
+  printf("thread library shutting down...\n");
+  t_shutdown();
+
+  return 0;
 }
