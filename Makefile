@@ -67,5 +67,11 @@ test5.o: test5.c ud_thread.h Makefile
 test5: test5.o t_lib.a Makefile
 	${CC} ${CFLAGS} test5.o t_lib.a -o test5
 
+%.o: %.c ud_thread.h Makefile
+	${CC} ${CFLAGS} -c %.c
+
+%: %.o t_lib.a Makefile
+	${CC} ${CFLAGS} %.o t_lib.a -o %
+
 clean:
 	rm -f t_lib.a ${EXECS} ${LIBOBJS} ${TSTOBJS} linked.o
