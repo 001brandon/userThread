@@ -162,38 +162,24 @@ void t_terminate()
 
 void t_shutdown() { //free running queue then free entire ready queue
     //how it works: gather every single tcb still running through allThreads list, free everything
+    //gather everying single tcb by putting it all in ready queue, destroy all tcb's semaphores to do this
     shutdownFlag = 1;
-    struct allThreads *ptr = origin->next;
+    struct allThreads *ptr = origin;
     struct allThreads *prev = ptr;
     while(ptr != NULL) {
         ptr = ptr->next;
         printf("looking at thread with id: %d\n",prev->thread->thread_id);
-        sem_signal(prev->thread->br_sem);
-        t_yield();
-        //delete the semaphores attached to tcb
-        printf("done\n");
-        //sem_destroy(&(prev->thread->mq_sem));
-        //sem_destroy(&(prev->thread->br_sem));
-
-        //delete message queue
-        /*struct messageNode *m = prev->thread->msg;
-        struct messageNode *mPrev = prev->thread->msg;
-        while(m != NULL) {
-            m = m->next;
-            free(mPrev->message);
-            free(mPrev);
-            mPrev = m;
-        }*/
-
-        //delete context
-        //free(prev->thread->thread_context->uc_stack.ss_sp);
-        //free(prev->thread->thread_context);
         
-
-        //free(prev->thread);
-        //free(prev);
+        //delete the semaphores attached to tcb
+        sem_destroy(&(prev->thread->br_sem));
+        sem_destroy(&(prev->thread->mq_sem));
+        
         prev = ptr;
     }
+    while(ready != NULL) {
+        t_yield();
+    }
+    printf("done yielding\n");
     sem_destroy(&(running->mq_sem));
     sem_destroy(&(running->br_sem));
     free(running->thread_context->uc_stack.ss_sp);
@@ -240,6 +226,11 @@ void sem_init(sem_t **sp, int sem_count){
 }
 
 void sem_wait(sem_t *sp){
+    if(sp == NULL) { //check if semaphore is null
+        printf("semaphore doesn't exist\n");
+        return;
+    }
+    printf("in wait\n");
     sp->count--;
    // printf("Executing sem_wait %d\n",sp->count);
     if(sp->count < 0){
@@ -262,6 +253,11 @@ void sem_wait(sem_t *sp){
 }
 
 void sem_signal(sem_t *sp){
+    if(sp == NULL) { //check if semaphore is null
+        printf("semaphore doesn't exist\n");
+        return;
+    }
+    printf("in signal\n");
     sp->count++;
     //printf("Executing sem signal %d \n",sp->count);
     if (sp->q != NULL){
@@ -282,7 +278,7 @@ void sem_signal(sem_t *sp){
 }
 
 void sem_destroy(sem_t **sp){
-    if(*sp == NULL) {
+    if(*sp == NULL) { //if the semaphore is already destroyed, simply return
         return;
     }
     if((*sp)->q==NULL){
@@ -302,7 +298,7 @@ void sem_destroy(sem_t **sp){
         }
         free(*sp);
     }
-    (*sp) = NULL;
+    (*sp) = NULL; //set semaphore to null once freed
 }
 
     /*
@@ -411,7 +407,12 @@ void sem_destroy(sem_t **sp){
     }
 
     void setToZero(sem_t *sem) {
-        sem->count = 0;
+        if(sem != NULL) { //check if semaphore is null
+            sem->count = 0;
+        }
+        else {
+            printf("semaphore doesn't exist!\n");
+        }
     }
 
     /*

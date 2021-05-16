@@ -26,12 +26,22 @@ void *worker2(void *arg) {
   int who=0;
   int who2=0;
   sem_signal(s1);
-  //sem_wait(s3);
-  //sem_wait(s3);
+  sem_wait(s3);
+  sem_wait(s3);
   receive(&who,msg,&len);
   printf("message by thread %d: %s\n",who,msg);
   printf("meow\n");
   who = 0;
+  receive(&who,msg,&len);
+  printf("message by thread %d: %s\n",who,msg);
+  printf("woof\n");
+  who = 0;
+  printf("there will be nothing to read here ever\n");
+  receive(&who,msg,&len);
+  printf("message by thread %d: %s\n",who,msg);
+  printf("woof\n");
+  who = 0;
+  printf("there will be nothing to read here ever\n");
   receive(&who,msg,&len);
   printf("message by thread %d: %s\n",who,msg);
   printf("woof\n");
@@ -79,13 +89,6 @@ int main(){
     id_num++;
     t_create(worker4,id_num,1);
     t_yield();
-    t_yield();
-    t_yield();
-    t_yield();
-    t_yield();
-    t_yield();
-    t_yield();
-    t_yield(); //need this many yields to make sure that we can return to the semaphore ready queue before the t_shutdown
     printf("calling shutdown\n");
     sem_destroy(&s1);
     sem_destroy(&s2);
