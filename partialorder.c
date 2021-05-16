@@ -30,26 +30,21 @@ void *worker2(void *arg) {
   sem_wait(s3);
   receive(&who,msg,&len);
   printf("message by thread %d: %s\n",who,msg);
-  printf("meow\n");
   who = 0;
   receive(&who,msg,&len);
   printf("message by thread %d: %s\n",who,msg);
-  printf("woof\n");
   who = 0;
   printf("there will be nothing to read here ever\n");
   receive(&who,msg,&len);
   printf("message by thread %d: %s\n",who,msg);
-  printf("woof\n");
   who = 0;
   printf("there will be nothing to read here ever\n");
   receive(&who,msg,&len);
   printf("message by thread %d: %s\n",who,msg);
-  printf("woof\n");
   who = 0;
   printf("there will be nothing to read here ever\n");
   receive(&who,msg,&len);
   printf("message by thread %d: %s\n",who,msg);
-  printf("woof\n");
   free(msg);
   free(msg2);
   t_terminate();
@@ -91,8 +86,8 @@ int main(){
     t_yield();
     printf("calling shutdown\n");
     sem_destroy(&s1);
-    sem_destroy(&s2);
-    sem_destroy(&s2);
+    sem_destroy(&s2); //defensive check to see what happens when you give a null pointer to sem_destroy
+    sem_destroy(&s2); 
     sem_destroy(&s2);
     sem_destroy(&s2);
     sem_destroy(&s2);

@@ -19,10 +19,7 @@ void t_yield()
         ready=ready->next;
         new->next=NULL;
         running=new;
-        //printf("this is the new id: %d\n",new->thread_id);
         swapcontext(old->thread_context, new->thread_context);
-
-
     }
 }
 
@@ -46,9 +43,7 @@ void t_init()
   struct allThreads *t = malloc(sizeof(struct allThreads));
   t->next = NULL;
   t->thread = tmp;
-  origin = t;
-  struct tcb *looking = (origin->thread);
-  printf("hello: %d\n",looking->thread_id);
+  origin = t; //set the top of the allThreads data structure to the thread calling t_init
 }
 
 int t_create(void (*fct)(int), int id, int pri)
@@ -91,16 +86,18 @@ int t_create(void (*fct)(int), int id, int pri)
       temp->next=newTcb;
   }
   struct allThreads *aThread = malloc(sizeof(struct allThreads));
-  struct tcb *looking;
   aThread->next = NULL;
   aThread->thread = newTcb;
   struct allThreads *tt = origin;
-  while(tt->next != NULL) {
-      tt = tt->next;
+  if(tt == NULL) {
+      origin = aThread;
   }
-  tt->next = aThread;
-  looking = (origin->thread);
-  printf("this is the thread id: %d\n",looking->thread_id);
+  else {
+      while(tt->next != NULL) {
+        tt = tt->next;
+      }
+      tt->next = aThread;
+  }
 }
 
 void t_terminate()
@@ -129,6 +126,7 @@ void t_terminate()
                 aPrev->next = aThread->next;
             }
             free(aThread);
+            aThread = NULL;
             break;
         }
         aPrev = aThread;
@@ -140,7 +138,6 @@ void t_terminate()
         ready=ready->next;
         new->next=NULL;
         running=new;
-        //printf("this is the new id: %d\n",new->thread_id);
         messageNode *msgList = old->msg;
         messageNode *msgPrev;
         while(msgList != NULL) {
@@ -152,11 +149,7 @@ void t_terminate()
         free(old->thread_context->uc_stack.ss_sp);
         free(old->thread_context);
         free(old);
-        //printf("Old is freed\n");
         setcontext(running->thread_context);
-    }
-    else {
-        printf("no threads left, finishing program\n");
     }
 }
 
@@ -168,55 +161,19 @@ void t_shutdown() { //free running queue then free entire ready queue
     struct allThreads *prev = ptr;
     while(ptr != NULL) {
         ptr = ptr->next;
-        printf("looking at thread with id: %d\n",prev->thread->thread_id);
-        
         //delete the semaphores attached to tcb
         sem_destroy(&(prev->thread->br_sem));
         sem_destroy(&(prev->thread->mq_sem));
-        
         prev = ptr;
     }
-    while(ready != NULL) {
+    while(ready != NULL) { //The big assumption is that if you yield enough, all threads will reach t_terminate
         t_yield();
     }
-    printf("done yielding\n");
-    sem_destroy(&(running->mq_sem));
-    sem_destroy(&(running->br_sem));
     free(running->thread_context->uc_stack.ss_sp);
     free(running->thread_context);
     free(running);
     free(origin);
     running=NULL;
-    /*
-    struct tcb *temp=ready;
-    while(ready!=NULL){
-        //delete message queue
-        struct messageNode *m = prev->thread->msg;
-        struct messageNode *mPrev = prev->thread->msg;
-        while(m != NULL) {
-            m = m->next;
-            free(mPrev->message);
-            free(mPrev);
-            mPrev = m;
-        }
-        free(temp->thread_context->uc_stack.ss_sp);
-        free(temp->thread_context);
-        free(temp);
-        ready=ready->next;
-        temp=ready;
-    }
-    ready=NULL;
-
-    //delete the semaphores attached to tcb
-    sem_destroy(&(running->mq_sem));
-    sem_destroy(&(running->br_sem));
-
-    
-
-    free(running->thread_context->uc_stack.ss_sp);
-    free(running->thread_context);
-    free(running);
-    running=NULL;*/
 }
 
 void sem_init(sem_t **sp, int sem_count){
@@ -230,9 +187,7 @@ void sem_wait(sem_t *sp){
         printf("semaphore doesn't exist\n");
         return;
     }
-    printf("in wait\n");
     sp->count--;
-   // printf("Executing sem_wait %d\n",sp->count);
     if(sp->count < 0){
         struct tcb *old=running;
         struct tcb *new=ready;
@@ -257,9 +212,7 @@ void sem_signal(sem_t *sp){
         printf("semaphore doesn't exist\n");
         return;
     }
-    printf("in signal\n");
     sp->count++;
-    //printf("Executing sem signal %d \n",sp->count);
     if (sp->q != NULL){
         struct tcb *temp=sp->q;
         struct tcb *new=ready;
@@ -421,13 +374,11 @@ void sem_destroy(sem_t **sp){
     that is part of the TCB
     */
     void receive(int *tid, char *msg, int *len) {
-        //printf("this is the message: %s\n",ptr->message);
         while(1) { //will go until forcibly returned out
             messageNode *ptr = running->msg;
             messageNode *prev = NULL;
             while(ptr != NULL) {
                 if(*tid == 0 || ptr->sender == *tid) {//message found
-                    printf("message found!\n");
                     *tid = ptr->sender;
                     strcpy(msg, ptr->message);
                     *len = ptr->len;
@@ -436,7 +387,6 @@ void sem_destroy(sem_t **sp){
                     }
                     else{
                         prev->next = prev->next->next;
-                        //running->msg = prev;
                     }
                     free(ptr->message);
                     free(ptr);
@@ -445,11 +395,9 @@ void sem_destroy(sem_t **sp){
                 prev = ptr;
                 ptr = ptr->next;
             }
-            printf("nothing found!\n");
             setToZero(running->br_sem);
             sem_wait(running->br_sem);
             if(shutdownFlag == 1) {
-                printf("this is the shutdown signal being read\n");
                 return;
             }
         }
