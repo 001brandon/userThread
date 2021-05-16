@@ -89,6 +89,10 @@ int main(){
     printf("calling shutdown\n");
     sem_destroy(&s1);
     sem_destroy(&s2);
+    sem_destroy(&s2);
+    sem_destroy(&s2);
+    sem_destroy(&s2);
+    sem_destroy(&s2);
     sem_destroy(&s3);
     t_shutdown();
     return 0;

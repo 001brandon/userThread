@@ -302,6 +302,7 @@ void sem_destroy(sem_t **sp){
         }
         free(*sp);
     }
+    (*sp) = NULL;
 }
 
     /*
