@@ -5,11 +5,11 @@ CFLAGS = -g
 
 LIBOBJS = t_lib.o 
 
-TSTOBJS = test00.o partialorder.o rendezvous.o
+TSTOBJS = test00.o partialorder.o rendezvous.o test*.o
 
 # specify the executable 
 
-EXECS = test00 partialorder rendezvous
+EXECS = test00 partialorder rendezvous test? test??
 
 # specify the source files
 
@@ -70,8 +70,9 @@ test5: test5.o t_lib.a Makefile
 %.o: %.c ud_thread.h Makefile
 	${CC} ${CFLAGS} -c %.c
 
-%: %.o t_lib.a Makefile
-	${CC} ${CFLAGS} %.o t_lib.a -o %
+%: %.c ud_thread.h t_lib.a Makefile
+	${CC} ${CFLAGS} -c $<
+	${CC} ${CFLAGS} $@.o t_lib.a -o $@
 
 clean:
 	rm -f t_lib.a ${EXECS} ${LIBOBJS} ${TSTOBJS} linked.o
