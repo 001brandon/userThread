@@ -68,7 +68,7 @@ test5: test5.o t_lib.a Makefile
 	${CC} ${CFLAGS} test5.o t_lib.a -o test5
 
 %.o: %.c ud_thread.h Makefile
-	${CC} ${CFLAGS} -c %.c
+	${CC} ${CFLAGS} -c $<
 
 %: %.c ud_thread.h t_lib.a Makefile
 	${CC} ${CFLAGS} -c $<
