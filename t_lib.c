@@ -373,12 +373,23 @@ void sem_destroy(sem_t **sp){
     TCB is queued on the queue of the semaphore (i.e., br_sem) 
     that is part of the TCB
     */
+   /*Any thread that calls blocking send will be placed in br_sem of
+   the receiver's tcb data structure, which means receive must 
+   check if the sender of the newest message is at the top of the br_sem queue,
+   and if it is then it needs to call sem_signal on br_sem
+   */ 
     void receive(int *tid, char *msg, int *len) {
         while(1) { //will go until forcibly returned out
             messageNode *ptr = running->msg;
             messageNode *prev = NULL;
             while(ptr != NULL) {
                 if(*tid == 0 || ptr->sender == *tid) {//message found
+                    sem_t *blockingSem = running->br_sem;
+                    if(blockingSem->q != NULL) { //check if something is at the top of current thread's blocking queue
+                        if(blockingSem->q->thread_id == ptr->sender) { //if this message's sender is top of br_sem q, the sender used a blocking send
+                            sem_signal(running->br_sem);
+                        }
+                    }
                     *tid = ptr->sender;
                     strcpy(msg, ptr->message);
                     *len = ptr->len;
@@ -401,4 +412,25 @@ void sem_destroy(sem_t **sp){
                 return;
             }
         }
+    }
+
+    /* Send a message and wait for reception. The same as send(), 
+    except that the caller does not return until the destination 
+    thread has received the message. */
+    void block_send(int tid, char *msg, int length) {
+        send(tid,msg,length);
+        struct tcb *thread = getThread(tid);
+        setToZero(thread->br_sem);
+        sem_wait(thread->br_sem);
+    }
+
+    /* Wait for and receive a message; the same as receive(), 
+    except that the caller (a receiver) also needs to specify the 
+    sender. */
+    void block_receive(int *tid, char *msg, int *length) {
+        if(*tid == 0) {
+            printf("blocking receive: must specify a sender!\n");
+            return;
+        }
+        receive(tid,msg,length);
     }
