@@ -294,12 +294,13 @@ void sem_destroy(sem_t **sp){
     void mbox_withdraw(mbox *mb, char* msg, int *len){
         sem_wait(mb->mbox_sem);
         messageNode *tmp=mb->msg;
+        //printf("message is: %s\n",tmp->message);
         if(tmp==NULL){
             *len = 0;
         }
         else{
             *len=tmp->len;
-            strncpy(msg,tmp->message,*len);
+            strcpy(msg,tmp->message);
             mb->msg=mb->msg->next;
             free(tmp->message);
             free(tmp);
