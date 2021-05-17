@@ -157,12 +157,12 @@ void t_shutdown() { //free running queue then free entire ready queue
     //how it works: gather every single tcb still running through allThreads list, free everything
     //gather everying single tcb by putting it all in ready queue, destroy all tcb's semaphores to do this
     shutdownFlag = 1;
-    while(ready != NULL) { //The big assumption is that if you yield enough, all threads will reach t_terminate
+    while(ready != NULL) { //allow the threads to all complete as is, some may get into blocking queues
         t_yield();
     }
     struct allThreads *ptr = origin;
     struct allThreads *prev = ptr;
-    while(ptr != NULL) {
+    while(ptr != NULL) { //delete all semaphores, which will force every thread into ready or running queue
         ptr = ptr->next;
         //delete the semaphores attached to tcb
         sem_destroy(&(prev->thread->br_sem));
