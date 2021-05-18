@@ -187,7 +187,7 @@ void sem_init(sem_t **sp, int sem_count){
 
 void sem_wait(sem_t *sp){
     if(sp == NULL) { //check if semaphore is null
-        printf("semaphore doesn't exist\n");
+        //printf("semaphore doesn't exist\n");
         return;
     }
     sp->count--;
@@ -212,7 +212,7 @@ void sem_wait(sem_t *sp){
 
 void sem_signal(sem_t *sp){
     if(sp == NULL) { //check if semaphore is null
-        printf("semaphore doesn't exist\n");
+        //printf("semaphore doesn't exist\n");
         return;
     }
     sp->count++;
@@ -329,7 +329,7 @@ void sem_destroy(sem_t **sp){
             }
             ptr = ptr->next;
         }
-        printf("thread with tid %d not found!\n",tid);
+        //printf("thread with tid %d not found!\n",tid);
         return NULL;
     }
 
@@ -337,7 +337,7 @@ void sem_destroy(sem_t **sp){
         struct tcb *thread = getThread(tid);
         messageNode *new_msg=malloc(sizeof(messageNode));
         if(thread == NULL) {
-            printf("send failed!\n");
+            //printf("send failed!\n");
             free(new_msg);
             return;
         }
@@ -368,7 +368,7 @@ void sem_destroy(sem_t **sp){
             sem->count = 0;
         }
         else {
-            printf("semaphore doesn't exist!\n");
+            //printf("semaphore doesn't exist!\n");
         }
     }
 
@@ -433,7 +433,7 @@ void sem_destroy(sem_t **sp){
     sender. */
     void block_receive(int *tid, char *msg, int *length) {
         if(*tid == 0) {
-            printf("blocking receive: must specify a sender!\n");
+            //printf("blocking receive: must specify a sender!\n");
             return;
         }
         receive(tid,msg,length);
